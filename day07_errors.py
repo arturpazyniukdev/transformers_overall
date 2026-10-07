@@ -4,7 +4,8 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 from day03_attention import OUTPUT_DIR
 from day04_baseline import SEED, load_data
-from day06_compare import MODEL_DIR, predict_fine_tuned
+from day05_finetune import MODEL_DIR
+from day06_compare import predict_fine_tuned
 
 
 def build_test_df() -> pd.DataFrame:
@@ -18,13 +19,9 @@ def build_test_df() -> pd.DataFrame:
         texts, labels, test_size=0.2, stratify=labels, random_state=SEED
     )
 
-    y_pred_ft = [
-        p["prediction"] for p in predict_fine_tuned(test_texts, model_ft, tokenizer)
-    ]
+    y_pred_ft = [p["prediction"] for p in predict_fine_tuned(test_texts, model_ft, tokenizer)]
 
-    return pd.DataFrame(
-        {"text": test_texts, "true_label": test_labels, "pred_label": y_pred_ft}
-    )
+    return pd.DataFrame({"text": test_texts, "true_label": test_labels, "pred_label": y_pred_ft})
 
 
 def print_examples(title: str, rows: pd.DataFrame, n: int = 5) -> None:
@@ -60,15 +57,13 @@ def main():
     print(f"\nAvg length of error texts: {errors['text_length'].mean():.0f}")
     print(f"Avg length of all texts: {df_test['text'].str.len().mean():.0f}")
 
-    observations = "\n".join(
-        [
-            "- Error texts are ~40% longer than average; max_length=128 cuts most of the review,",
-            "  often the final verdict.",
-            "- Mixed tone: negative reviews with praise for parts (jokes, budget) -> false positive.",
-            "- Irony / 'guilty pleasure': positive reviews full of negative words",
-            "  ('ridiculous', 'dumb') -> false negative.",
-            "- More FP (33) than FN (23): the model leans toward 'positive'.",
-        ]
+    observations = (
+        "- Error texts are ~40% longer than average; max_length=128 cuts most of the review,\n"
+        "  often the final verdict.\n"
+        "- Mixed tone: negative reviews with praise for parts (jokes, budget) -> false positive.\n"
+        "- Irony / 'guilty pleasure': positive reviews full of negative words\n"
+        "  ('ridiculous', 'dumb') -> false negative.\n"
+        "- More FP (33) than FN (23): the model leans toward 'positive'."
     )
 
     report = "\n".join(

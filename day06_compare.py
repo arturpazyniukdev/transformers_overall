@@ -22,8 +22,8 @@ from day01_tokenization import MODEL_NAME
 from day02_embeddings import get_embeddings
 from day03_attention import OUTPUT_DIR
 from day04_baseline import BASELINE_PATH, SEED, load_data
+from day05_finetune import MODEL_DIR
 
-MODEL_DIR = OUTPUT_DIR / "fine_tuned_model"
 EXAMPLES = [
     "This movie was absolutely fantastic!",
     "Terrible, waste of my time.",
@@ -46,9 +46,7 @@ def predict_baseline(
     probs = model.predict_proba(X)
     results = []
     for i, text in enumerate(texts):
-        results.append(
-            {"text": text, "prediction": int(predictions[i]), "probabilities": probs[i]}
-        )
+        results.append({"text": text, "prediction": int(predictions[i]), "probabilities": probs[i]})
     return results
 
 
@@ -64,9 +62,7 @@ def predict_fine_tuned(
             outputs = model(**inputs)
         probs = torch.softmax(outputs.logits, dim=1)
         pred = torch.argmax(probs, dim=1).item()
-        predictions.append(
-            {"text": text, "prediction": pred, "probabilities": probs[0].numpy()}
-        )
+        predictions.append({"text": text, "prediction": pred, "probabilities": probs[0].numpy()})
     return predictions
 
 
@@ -74,19 +70,15 @@ def main():
     model_ft = AutoModelForSequenceClassification.from_pretrained(MODEL_DIR)
     tokenizer = AutoTokenizer.from_pretrained(MODEL_DIR)
     model_ft.eval()
-    print(model_ft.config.num_labels)
     baseline_model = joblib.load(BASELINE_PATH)
     encoder = AutoModel.from_pretrained(MODEL_NAME)
     encoder.eval()
-    print(type(baseline_model).__name__, baseline_model.coef_.shape)
 
     preds_ft = predict_fine_tuned(EXAMPLES, model_ft, tokenizer)
     preds_base = predict_baseline(EXAMPLES, baseline_model, tokenizer, encoder)
     for i, text in enumerate(EXAMPLES):
         print(f"\nText: {text}")
-        print(
-            f"Fine-tuned: {preds_ft[i]['prediction']} (probs: {preds_ft[i]['probabilities']})"
-        )
+        print(f"Fine-tuned: {preds_ft[i]['prediction']} (probs: {preds_ft[i]['probabilities']})")
         print(
             f"Baseline:   {preds_base[i]['prediction']} (probs: {preds_base[i]['probabilities']})"
         )
@@ -97,9 +89,7 @@ def main():
     _, test_texts, _, test_labels = train_test_split(
         texts, labels, test_size=0.2, stratify=labels, random_state=SEED
     )
-    y_pred_ft = [
-        p["prediction"] for p in predict_fine_tuned(test_texts, model_ft, tokenizer)
-    ]
+    y_pred_ft = [p["prediction"] for p in predict_fine_tuned(test_texts, model_ft, tokenizer)]
     cm_ft = confusion_matrix(test_labels, y_pred_ft)
     print(cm_ft)
 

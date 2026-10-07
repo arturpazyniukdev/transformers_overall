@@ -2,8 +2,7 @@ import gradio as gr
 import torch
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
-from day06_compare import MODEL_DIR
-
+from day05_finetune import MODEL_DIR
 
 LABEL_MAP = {0: "Negative", 1: "Positive"}
 

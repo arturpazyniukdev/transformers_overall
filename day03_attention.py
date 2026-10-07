@@ -36,9 +36,7 @@ def visualize_attention(tokens, attentions, tokenizer, layer=0, head=0):
 
 def main():
     tokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(MODEL_NAME)
-    model: PreTrainedModel = AutoModel.from_pretrained(
-        MODEL_NAME, output_attentions=True
-    )
+    model: PreTrainedModel = AutoModel.from_pretrained(MODEL_NAME, output_attentions=True)
     model.eval()
     text = "This movie was absolutely terrible and I hated it"
     tokens = tokenizer(text, return_tensors="pt")

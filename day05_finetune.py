@@ -4,7 +4,6 @@ from sklearn.model_selection import train_test_split
 from torch.optim import AdamW
 from torch.utils.data import DataLoader, Dataset
 from transformers import (
-    AutoModel,
     AutoModelForSequenceClassification,
     AutoTokenizer,
     PreTrainedModel,
@@ -16,6 +15,7 @@ from day03_attention import OUTPUT_DIR
 from day04_baseline import SEED, load_data
 
 NUM_EPOCHS = 3
+MODEL_DIR = OUTPUT_DIR / "fine_tuned_model"
 
 
 class SentimentDataset(Dataset):
@@ -66,9 +66,7 @@ def train_epoch(
         input_ids = batch["input_ids"].to(device)
         attention_mask = batch["attention_mask"].to(device)
         labels = batch["labels"].to(device)
-        outputs = model(
-            input_ids=input_ids, attention_mask=attention_mask, labels=labels
-        )
+        outputs = model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
         loss = outputs.loss
         loss.backward()
         optimizer.step()
@@ -99,17 +97,13 @@ def main():
     df = load_data()
     texts, labels = df["text"].tolist(), df["label"].tolist()
     tokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(MODEL_NAME)
-    model: PreTrainedModel = AutoModel.from_pretrained(MODEL_NAME)
-    model.eval()
     train_texts, val_texts, train_labels, val_labels = train_test_split(
         texts, labels, test_size=0.2, stratify=labels, random_state=SEED
     )
     train_dataset = SentimentDataset(train_texts, train_labels, tokenizer)
     val_dataset = SentimentDataset(val_texts, val_labels, tokenizer)
     num_labels = len(set(labels))
-    model = AutoModelForSequenceClassification.from_pretrained(
-        MODEL_NAME, num_labels=num_labels
-    )
+    model = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME, num_labels=num_labels)
     train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=16)
     optimizer = AdamW(model.parameters(), lr=2e-5)
@@ -131,9 +125,8 @@ def main():
         print(f"Val F1: {val_f1:.4f}")
         print("-" * 50)
 
-    model_dir = OUTPUT_DIR / "fine_tuned_model"
-    model.save_pretrained(model_dir)
-    tokenizer.save_pretrained(model_dir)
+    model.save_pretrained(MODEL_DIR)
+    tokenizer.save_pretrained(MODEL_DIR)
     (OUTPUT_DIR / "fine_tuned_results.txt").write_text(
         f"Final Validation F1: {val_f1:.4f}\nFinal Validation Accuracy: {val_acc:.4f}\n"
     )
