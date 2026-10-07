@@ -1,3 +1,4 @@
+import joblib
 import pandas as pd
 from datasets import load_dataset
 from sklearn.linear_model import LogisticRegression
@@ -16,6 +17,7 @@ from day03_attention import OUTPUT_DIR
 
 SAMPLE_SIZE = 2000
 SEED = 42
+BASELINE_PATH = OUTPUT_DIR / "baseline_model.pkl"
 
 
 def load_data(n: int = SAMPLE_SIZE) -> pd.DataFrame:
@@ -41,6 +43,7 @@ def main():
     f1 = f1_score(y_test, y_pred, average="macro")
     print(f"Macro F1: {f1:.3f}")
     OUTPUT_DIR.mkdir(exist_ok=True)
+    joblib.dump(clf, BASELINE_PATH)
     (OUTPUT_DIR / "baseline_results.txt").write_text(f"Macro F1: {f1:.3f}\n")
 
 
